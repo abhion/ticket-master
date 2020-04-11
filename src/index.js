@@ -1,17 +1,29 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import * as serviceWorker from './serviceWorker';
+import App from './components/App';
+import { Provider } from 'react-redux';
+import configureStore from './store/configureStore';
+import { BrowserRouter, Route } from 'react-router-dom';
+import * as customersAction from './actions/customersAction';
+import * as ticketsAction from './actions/ticketsAction';
+import * as employeesAction from './actions/employeesAction';
+import * as departmentsAction from './actions/departmentsAction';
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
+const store = configureStore();
+
+store.dispatch(ticketsAction.startGetTickets());
+store.dispatch(employeesAction.startGetEmployees());
+store.dispatch(customersAction.startGetCustomers());
+store.dispatch(departmentsAction.startGetDepartments());
+// store.subscribe(()=> {console.log(store.getState(), "SUB");})
+
+const el = (
+    <Provider store={store}>
+        <BrowserRouter>
+            <Route path="/"  component={App} />
+        </BrowserRouter>
+    </Provider>
 );
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();
+
+ReactDOM.render(el, document.getElementById('root'))

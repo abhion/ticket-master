@@ -1,0 +1,93 @@
+*{
+}
+.content-container{
+    width: 90%;
+    margin: auto;
+    border-radius: 3px;
+    min-height: 680px;
+    box-shadow: 0 0 3px 2px #cccccc;
+}
+.logo{
+    display: flex;
+    align-items: center;
+    width: 170px;
+    justify-content: space-around;
+}
+.logo img{
+    width: 30px;
+}
+.logo h2{
+    color: white;
+    font-weight: 400;
+}
+.ant-layout .layout{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+.container-header{
+    padding: 25px 40px;
+    padding-bottom: 15px;
+    margin: 5px;
+    display: flex;
+    justify-content: space-between;
+}
+main div{
+    width: 100%;
+}
+.ant-checkbox-inner{
+
+  border:  1px solid #8a8a8a !important;
+}
+.ant-table-content{
+    padding: 10px 60px !important;
+}
+.ant-table-pagination-right{
+    margin: 65px !important;
+}
+.ant-tabs{
+    padding: 18px;
+}
+.ant-tabs-tab{
+    width: 50px;;
+}
+.High{
+    color: red;
+}
+.Medium{
+    color: #ff9c20;
+}
+.Low{
+    color: #927a7a;
+}
+.card{
+    width: 480px;
+    border: 1px solid rgba(156, 155, 155, 0.6);
+    padding: 10px;
+    border-radius: 3px;
+    background: rgba(216, 213, 213, 0.1);
+}
+.completedCard{
+    width: 480px;
+    border: 1px solid rgba(17, 228, 101, 0.6);
+    padding: 10px;
+    border-radius: 3px;
+    background: rgba(0, 220, 88, 0.1);
+}
+.pendingCard{
+    width: 480px;
+    border: 1px solid rgb(255, 136, 136, 0.6);
+    padding: 10px;
+    border-radius: 3px;
+    background: rgba(243, 96, 96, 0.1);
+}
+
+.ticket-container{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+}
+.ticket-card{
+    margin: 10px 0;
+    box-shadow: 0px 0px 7px 0px #d2cbcb;
+}
