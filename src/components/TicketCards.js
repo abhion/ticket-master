@@ -29,7 +29,7 @@ class TicketCards extends React.Component {
     getDepartmentsById = (id) => this.props.departments.find(department => department._id == id) || {}
 
     renderAllTickets = (tickets) => {
-        debugger
+        
 
         return tickets.map(ticket => {
 
@@ -45,14 +45,7 @@ class TicketCards extends React.Component {
                     <div >
                         <span style={{ fontWeight: 700 }} >Employees</span> - {
                             this.getEmployeesById(ticket.employees).map(employee => {
-                                return <span style={{
-                                    border: '1px solid rgb(48, 194, 218)',
-                                    background: '#8fefff',
-                                    color: '#333',
-                                    padding: '3px',
-                                    borderRadius: '3px',
-                                    margin: '0 3px'
-                                }}>{employee.name}</span>
+                                return <span className="employee-box">{employee.name}</span>
                             })
                         }
                     </div>
@@ -85,14 +78,7 @@ class TicketCards extends React.Component {
                     <div >
                         <span style={{ fontWeight: 700 }} >Employees</span> - {
                             this.getEmployeesById(ticket.employees).map(employee => {
-                                return <span style={{
-                                    border: '1px solid rgb(48, 194, 218)',
-                                    background: '#8fefff',
-                                    color: '#333',
-                                    padding: '3px',
-                                    borderRadius: '3px',
-                                    margin: '0 3px'
-                                }}>{employee.name}</span>
+                                return <span className="employee-box">{employee.name}</span>
                             })
                         }
                     </div>
@@ -125,14 +111,7 @@ class TicketCards extends React.Component {
                     <div >
                         <span style={{ fontWeight: 700 }} >Employees</span> - {
                             this.getEmployeesById(ticket.employees).map(employee => {
-                                return <span style={{
-                                    border: '1px solid rgb(48, 194, 218)',
-                                    background: '#8fefff',
-                                    color: '#333',
-                                    padding: '3px',
-                                    borderRadius: '3px',
-                                    margin: '0 3px'
-                                }}>{employee.name}</span>
+                                return <span className="employee-box">{employee.name}</span>
                             })
                         }
                     </div>
@@ -156,7 +135,7 @@ class TicketCards extends React.Component {
         if(this.state.ticketFilter && this.state.filterId){
             if (tabKey == 1) {
                 if(this.state.ticketFilter == 'employee'){
-                    debugger
+                    
                     return this.props.tickets.filter(ticket => ticket.employees.find(emp => emp._id == this.state.filterId));
                 }
                 return this.props.tickets.filter(ticket => ticket[this.state.ticketFilter] === this.state.filterId);

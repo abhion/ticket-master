@@ -25,7 +25,7 @@ class Customers extends React.Component {
                 key: 4,
                 title: 'Action',
                 render: (text, record) => {
-                    debugger
+                    
                     return (
                         <div>
                             <Link to={{

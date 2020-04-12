@@ -81,8 +81,11 @@ class CustomerEdit extends React.Component {
 
     render() {
         return (
+            <div className="content-container" style={{padding: '20px'}}>
+
             <Form ref={this.edFormRef} onFinish={this.onFinish}>
-                
+          
+           
                         <Form.Item
                             name="name"
                             label="Customer name"
@@ -90,8 +93,6 @@ class CustomerEdit extends React.Component {
                         >
                             <Input placeholder="Please enter name" />
                         </Form.Item>
-                   
-               
                         <Form.Item
                             name="email"
                             label="Email"
@@ -112,6 +113,7 @@ class CustomerEdit extends React.Component {
                     <Button type="primary" loading={this.state.submitBtnLoading} htmlType="submit">Submit</Button>
                 </Form.Item>
             </Form>
+            </div>
         );
     }
 }

@@ -89,7 +89,7 @@ main div{
 }
 .ticket-card{
     margin: 10px 0;
-    box-shadow: 0px 0px 7px 0px #d0d0d0
+    box-shadow: 0px 0px 7px 0px #eae8e8;
 }
 .ant-progress-text{
     color: white;
@@ -108,4 +108,18 @@ main div{
 .link-text{
     color: #18a5dd;
     cursor: pointer;
+}
+.employee-box{
+    border: 1px solid rgb(212, 219, 219);
+    background: rgb(230, 230, 230);
+    color: rgb(51, 51, 51);
+    padding: 3px;
+    border-radius: 3px;
+    margin: 0px 3px;
+}
+.ticket-card h4{
+    font-weight: 400;
+}
+.ant-form-item-label{
+    text-align: left !important;
 }

@@ -47,14 +47,7 @@ class Tickets extends React.Component {
 
                         if (record.employees) {
                             return record.employees.map(emp => {
-                                return <span key={emp._id} style={{
-                                    border: '1px solid rgb(48, 194, 218)',
-                                    background: '#8fefff',
-                                    color: '#333',
-                                    padding: '3px',
-                                    borderRadius: '3px',
-                                    margin: '0 3px'
-                                }}> {this.findEmployeeById(emp._id)} </span>
+                                return <span key={emp._id} className="employee-box"> {this.findEmployeeById(emp._id)} </span>
                             })
                         }
                     }
@@ -73,11 +66,11 @@ class Tickets extends React.Component {
                             <Link to={{
                                 pathname: `/tickets/edit/${record._id}`,
                                 state: { ticket: record }
-                            }}>Edit | </Link>
-                            <Link to={{
+                            }}>Edit  </Link>
+                            {/* <Link to={{
                                 pathname: `/tickets/${record._id}`,
                                 state: { ticket: record }
-                            }}>Remove</Link>
+                            }}>Remove</Link> */}
 
                         </div>
 
