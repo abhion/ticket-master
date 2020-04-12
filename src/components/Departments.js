@@ -1,10 +1,11 @@
 import React from 'react'
 import axios from 'axios';
 import { connect } from 'react-redux';
-import { Button, Modal, Form, Row, Col, Input, message, Table } from 'antd';
+import { Button, Modal, Form, Row, Col, Input, message, Table, Popconfirm } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
-
+import * as departmentsAction from '../actions/departmentsAction';
+import {setLoginActionFalse} from '../actions/setLoginAction';
 
 class Departments extends React.Component {
 
@@ -16,8 +17,7 @@ class Departments extends React.Component {
             addModalVisible: false,
             editModalVisible: false,
             editDepartmentLoading: false,
-            addDepartmentLoading: false,
-            departments: []
+            addDepartmentLoading: false
         }
         this.tableColumns = [
             { title: 'Name', dataIndex: 'name', key: 1 },
@@ -29,15 +29,43 @@ class Departments extends React.Component {
                         <div>
                             <a onClick={() => this.showEditDialog(record)}>Edit | </a>
                             <Link to={{
-                                pathname: `/tickets/${record._id}`,
-                                state: { department: record }
-                            }}>Tickets</Link>
+                                pathname: `/users/tickets`,
+                                state: { department: record },
+                                search: `?department=${record._id}`
+                            }}>Tickets | </Link>
+                             <Popconfirm
+                                placement="right"
+                                key={record._id}
+                                title="Are you sure?"
+                                onConfirm={(ev) => this.deleteDepartment(ev, record)}
+                                okText="Yes"
+                                cancelText="No"
+                            >
+                                <span className="link-text"> Delete</span>
+                            </Popconfirm>
                         </div>
 
                     );
                 }
             }
         ]
+    }
+
+    deleteDepartment = (d, dept) => {
+        console.log(d, dept);
+        axios.delete(`http://dct-ticket-master.herokuapp.com/departments/${dept._id}`, {
+            headers: {
+                'x-auth': localStorage.getItem('authToken')
+            }
+        })
+            .then(response => {
+                console.log(response, "DOLAFE");
+                if(response.data._id){
+                    message.success('Deleted');
+                }
+                this.props.dispatch(departmentsAction.startGetDepartments());
+            })
+            .catch(err => err.message == 'Request failed with status code 401' ? this.props.dispatch(setLoginActionFalse()) : console.log(err));
     }
 
     showEditDialog(department) {
@@ -55,28 +83,7 @@ class Departments extends React.Component {
 
     }
 
-    fetchDepartments = () => {
-        axios.get(`${this.props.apiUrl}/departments`, {
-            headers: {
-                'x-auth': localStorage.getItem('authToken')
-            }
-        })
-            .then(response => {
-                console.log(response, "DEPTOS8");
-                this.setState(prevState => {
-                    return {
-                        departments: [...response.data]
-                    }
-                })
-            })
-            .catch(err => message.err(err.message));
-    }
-
-    componentDidMount() {
-        console.log(this.props)
-        this.fetchDepartments();
-
-    }
+    
 
     handleFormFieldsReset = () => {
         setTimeout(() => {
@@ -96,21 +103,14 @@ class Departments extends React.Component {
         })
             .then(response => {
                 console.log(response);
-                this.setState(prevState => {
-                    return {
-                        departments: prevState.departments
-                            .map(dept => {
-                                if (dept._id === this.setActiveDeptId) {
-                                    return { ...response.data }
-                                }
-                                return { ...dept }
-                            }),
-                            editModalVisible: false,
-                            editDepartmentLoading: false
-                    }
-                })
+               this.props.dispatch(departmentsAction.startGetDepartments());
+               message.success('Updated');
+               this.setState({
+                   editDepartmentLoading: false,
+                   editModalVisible: false
+               })
             })
-            .catch(err => console.log(err))
+            .catch(err => err.message == 'Request failed with status code 401' ? this.props.dispatch(setLoginActionFalse()) : console.log(err));
 
     }
 
@@ -132,20 +132,15 @@ class Departments extends React.Component {
                     this.setState({ addDepartmentLoading: false });
                 }
                 else {
-                    this.setState(prevState => {
-                        return {
-                            addDepartmentLoading: false,
-                            addModalVisible: false,
-                            departments: [...prevState.departments, response.data]
-                        }
-                    })
+                    this.props.dispatch(departmentsAction.startGetDepartments());
+                    this.setState({ addDepartmentLoading: false, addModalVisible: false });
                 }
-                this.setState({ addDepartmentLoading: false });
             })
             .catch(err => {
                 console.log(err);
                 message.error(err.message);
                 this.setState({ addDepartmentLoading: false });
+                return err => err.message == 'Request failed with status code 401' ? this.props.dispatch(setLoginActionFalse()) : console.log(err);
             })
     }
 
@@ -163,7 +158,8 @@ class Departments extends React.Component {
                 <div>
                     <Table
                         columns={this.tableColumns}
-                        dataSource={this.state.departments}
+                        dataSource={this.props.departments}
+                        pagination={{ pageSize: 6 }}
                         rowKey="_id"
                         bordered
                     />
@@ -244,7 +240,8 @@ class Departments extends React.Component {
 
 function mapStateToProps(state) {
     return {
-        apiUrl: state.apiUrl
+        apiUrl: state.apiUrl,
+        departments: state.departments
     }
 }
 

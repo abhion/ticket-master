@@ -4,6 +4,7 @@ import axios from 'axios';
 import { connect } from 'react-redux';
 import createHistory from 'history/createBrowserHistory'
 import * as ticketsAction from '../actions/ticketsAction';
+import { setLoginActionFalse } from '../actions/setLoginAction';
 const { Option } = Select;
 
 const {TextArea} = Input;
@@ -31,7 +32,7 @@ class TicketEdit extends React.Component {
             .then(response => {
                 return Promise.resolve(response.data);
             })
-            .catch(err => mess.error(err.message));
+            .catch(err => err.message == 'Request failed with status code 401' ? this.props.dispatch(setLoginActionFalse()) : console.log(err));
     }
 
     componentDidMount() {
@@ -90,7 +91,7 @@ class TicketEdit extends React.Component {
 
                 }
             })
-            .catch(err => console.log(err));
+            .catch(err => err.message == 'Request failed with status code 401' ? this.props.dispatch(setLoginActionFalse()) : console.log(err));
     }
 
     onReset = () => {

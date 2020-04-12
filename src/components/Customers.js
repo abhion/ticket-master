@@ -1,9 +1,11 @@
 import React from 'react'
 import axios from 'axios';
 import { connect } from 'react-redux';
-import { Button, Modal, Form, Row, Col, Input, message, Table } from 'antd';
+import { Button, Modal, Form, Row, Col, Input, message, Table, Popconfirm } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom'; 
+import { setLoginActionFalse } from '../actions/setLoginAction'
+import * as customersAction from '../actions/customersAction';
 
 
 class Customers extends React.Component {
@@ -13,8 +15,7 @@ class Customers extends React.Component {
         this.addCustomerFormRef = React.createRef();
         this.state = {
             addModalVisible: false,
-            addCustomerLoading: false,
-            customers: []
+            addCustomerLoading: false
         }
         this.tableColumns = [
             { title: 'Name', dataIndex: 'name', key: 1 },
@@ -24,6 +25,7 @@ class Customers extends React.Component {
                 key: 4,
                 title: 'Action',
                 render: (text, record) => {
+                    debugger
                     return (
                         <div>
                             <Link to={{
@@ -31,9 +33,20 @@ class Customers extends React.Component {
                                 state: { customer: record }
                             }}>Edit | </Link>
                             <Link to={{
-                                pathname: `/tickets/${record._id}`,
-                                state: { customer: record }
-                            }}>Tickets</Link>
+                                pathname: `/users/tickets`,
+                                state: { customer: record },
+                                search: `?customer=${record._id}`
+                            }}>Tickets | </Link>
+                            <Popconfirm
+                                placement="right"
+                                key={record._id}
+                                title="Are you sure?"
+                                onConfirm={(ev) => this.deleteCustomer(ev, record)}
+                                okText="Yes"
+                                cancelText="No"
+                            >
+                                <span className="link-text"> Delete</span>
+                            </Popconfirm>
                         </div>
 
                     );
@@ -42,28 +55,23 @@ class Customers extends React.Component {
         ]
     }
 
-    fetchCustomers = () => {
-        axios.get(`${this.props.apiUrl}/customers`, {
+    deleteCustomer = (d, customer) => {
+        console.log(d, customer);
+        axios.delete(`http://dct-ticket-master.herokuapp.com/customers/${customer._id}`, {
             headers: {
                 'x-auth': localStorage.getItem('authToken')
             }
         })
             .then(response => {
-                console.log(response, "CUSTOS");
-                this.setState(prevState => {
-                    return {
-                        customers: [...response.data]
-                    }
-                })
+                console.log(response, "DOLAFE");
+                if (response.data._id) {
+                    message.success('Deleted');
+                }
+                this.props.dispatch(customersAction.startGetCustomers());
             })
-            .catch(err => message.error(err.message));
+            .catch(err => err.message == 'Request failed with status code 401' ? this.props.dispatch(setLoginActionFalse()) : console.log(err));
     }
 
-    componentDidMount() {
-        console.log(this.props)
-        this.fetchCustomers();
-
-    }
 
     handleFormFieldsReset = () => {
         setTimeout(() => {
@@ -89,20 +97,15 @@ class Customers extends React.Component {
                     this.setState({ addCustomerLoading: false });
                 }
                 else {
-                    this.setState(prevState => {
-                        return {
-                            addCustomerLoading: false,
-                            addModalVisible: false,
-                            customers: [...prevState.customers, response.data]
-                        }
-                    })
+                    this.props.dispatch(customersAction.startGetCustomers());
+                    this.setState({ addCustomerLoading: false, addModalVisible: false });
                 }
-                this.setState({ addCustomerLoading: false });
             })
             .catch(err => {
                 console.log(err);
                 message.error(err.message);
                 this.setState({ addCustomerLoading: false });
+                return err => err.message == 'Request failed with status code 401' ? this.props.dispatch(setLoginActionFalse()) : console.log(err)
             })
     }
 
@@ -120,8 +123,9 @@ class Customers extends React.Component {
                 <div>
                     <Table
                         columns={this.tableColumns}
-                        dataSource={this.state.customers}
+                        dataSource={this.props.customers}
                         rowKey="_id"
+                        pagination={{ pageSize: 6 }}
                         bordered
                     />
                 </div>
@@ -189,7 +193,8 @@ class Customers extends React.Component {
 
 function mapStateToProps(state) {
     return {
-        apiUrl: state.apiUrl
+        apiUrl: state.apiUrl,
+        customers: state.customers
     }
 }
 

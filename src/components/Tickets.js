@@ -1,10 +1,12 @@
 import React from 'react'
 import axios from 'axios';
 import { connect } from 'react-redux';
-import { Button, Modal, Form, Row, Col, Input, message, Table, Select, Tabs, Radio, Checkbox } from 'antd';
+import { Button, Modal, Form, Row, Col, Input, message as mess, Table, Select, Tabs, Radio, Checkbox, Divider, Progress } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
 import * as ticketsAction from '../actions/ticketsAction';
+import Chart from 'react-google-charts';
+import { setLoginActionFalse } from '../actions/setLoginAction';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -19,11 +21,12 @@ class Tickets extends React.Component {
         this.state = {
             addModalVisible: false,
             addTicketLoading: false,
-            tickets:  [],
+            tickets: [],
             employees: [],
             customers: [],
             departments: [],
-            allEmployees: []
+            allEmployees: [],
+            barChartData: []
         }
         this.tableColumns = [
             { title: 'Code', dataIndex: 'code', key: 1 },
@@ -44,7 +47,7 @@ class Tickets extends React.Component {
 
                         if (record.employees) {
                             return record.employees.map(emp => {
-                                return <span style={{
+                                return <span key={emp._id} style={{
                                     border: '1px solid rgb(48, 194, 218)',
                                     background: '#8fefff',
                                     color: '#333',
@@ -57,16 +60,16 @@ class Tickets extends React.Component {
                     }
                 }
             },
-            { title: 'Message', dataIndex: 'message', key: 5 },
+            { title: 'Message', dataIndex: 'message', key: 5, width: '360px' },
             {
                 key: 6,
                 title: 'Action',
                 render: (text, record) => {
                     return (
                         <div>
-                        <Checkbox checked={record.isResolved} onChange={(e) => this.onTicketStatusChanged(e, record)}> 
-                            <span style={{color: 'rgb(54, 143, 243)'}}>Change Status | </span> 
-                        </Checkbox> 
+                            <Checkbox checked={record.isResolved} onChange={(e) => this.onTicketStatusChanged(e, record)}>
+                                <span style={{ color: 'rgb(54, 143, 243)' }}>Change Status | </span>
+                            </Checkbox>
                             <Link to={{
                                 pathname: `/tickets/edit/${record._id}`,
                                 state: { ticket: record }
@@ -75,7 +78,7 @@ class Tickets extends React.Component {
                                 pathname: `/tickets/${record._id}`,
                                 state: { ticket: record }
                             }}>Remove</Link>
-                            
+
                         </div>
 
                     );
@@ -125,7 +128,7 @@ class Tickets extends React.Component {
                     }
                 })
             })
-            .catch(err => message.error(err.message));
+            .catch(err => err.message == 'Request failed with status code 401' ? this.props.dispatch(setLoginActionFalse()) : console.log(err));
     }
 
     fetchEmployees = () => {
@@ -137,7 +140,7 @@ class Tickets extends React.Component {
             .then(response => {
                 this.setState({ allEmployees: [...response.data] });
             })
-            .catch(err => message.error(err.message));
+            .catch(err => err.message == 'Request failed with status code 401' ? this.props.dispatch(setLoginActionFalse()) : console.log(err));
     }
 
     fetchCustomers = () => {
@@ -153,14 +156,18 @@ class Tickets extends React.Component {
                     }
                 })
             })
-            .catch(err => message.error(err.message));
+            .catch(err => err.message == 'Request failed with status code 401' ? this.props.dispatch(setLoginActionFalse()) : console.log(err));
     }
 
     componentDidMount() {
-       
+
         this.fetchEmployees();
         this.fetchDepartments();
         this.fetchCustomers();
+
+        this.setState({
+            barChartData: this.getBarchartData()
+        })
     }
 
     handleFormFieldsReset = () => {
@@ -170,7 +177,7 @@ class Tickets extends React.Component {
     }
 
     onAddTicket = (values) => {
-        console.log(values, "CuA");
+        // console.log(values, "CuA");
         const { code, customer, department, message, priority } = values;
 
         const employees = values.employees.map(emp => JSON.parse(emp));
@@ -183,9 +190,12 @@ class Tickets extends React.Component {
             }
         })
             .then(response => {
-                if (response && response.data.error) {
-                    message.error(response.data.error);
+                console.log(response);
+
+                if (response && (response.data.errors)) {
+                    mess.error(response.data.message);
                     this.setState({ addTicketLoading: false });
+                    return
                 }
                 else {
                     this.setState(prevState => {
@@ -201,8 +211,9 @@ class Tickets extends React.Component {
             })
             .catch(err => {
                 console.log(err);
-                message.error(err.message);
+                mess.error(err.message);
                 this.setState({ addTicketLoading: false });
+                return err => err.message == 'Request failed with status code 401' ? this.props.dispatch(setLoginActionFalse()) : console.log(err);
             })
     }
 
@@ -220,25 +231,83 @@ class Tickets extends React.Component {
 
     onTicketStatusChanged = (e, ticket) => {
         console.log(e, ticket);
-        axios.put(`http://dct-ticket-master.herokuapp.com/tickets/${ticket._id}`, {isResolved: e.target.checked}, {
+        axios.put(`http://dct-ticket-master.herokuapp.com/tickets/${ticket._id}`, { isResolved: e.target.checked }, {
             headers: {
                 'x-auth': localStorage.getItem('authToken')
-            }})
+            }
+        })
             .then(response => {
                 console.log(response);
                 this.props.dispatch(ticketsAction.startGetTickets());
-                
+
             })
+            .catch(err => err.message == 'Request failed with status code 401' ? this.props.dispatch(setLoginActionFalse()) : console.log(err));
+    }
+
+    getBarchartData = () => {
+        
+        if (this.props.departments.length && this.props.tickets.length) {
+            
+            const chartData = [];
+            chartData.push(['Department', 'Tickets'])
+            this.props.departments.forEach(dept => {
+                chartData.push([dept.name, this.getTicketCountForDept(dept._id)])
+            })
+            console.log(chartData, "Chartda");
+
+            return chartData;
+        }
+        return [];
+
+    }
+
+    getPieChartData = () => {
+        let highPriorityCount = 0, lowPriorityCount = 0, mediumPriorityCount = 0;
+        this.props.tickets.forEach(ticket => {
+            if (ticket.priority === "High") {
+                ++highPriorityCount
+            }
+            if (ticket.priority === "Medium") {
+                ++mediumPriorityCount
+            }
+            if (ticket.priority === "Low") {
+                ++lowPriorityCount
+            }
+        })
+        
+        const chartData = [
+            ['Priority', 'Count'],
+            ['High', highPriorityCount],
+            ['Medium', mediumPriorityCount],
+            ['Low', lowPriorityCount]
+        ];
+        return chartData;
+    }
+
+    getTicketCountForDept = (deptId) => {
+        
+        return this.props.tickets.filter(ticket => ticket.department == deptId).length
+    }
+
+    calculatePercentage = () => {
+        const tickets = this.props.tickets;
+        const totalTickets = tickets.length;
+        let completedTickets = 0;
+        tickets.forEach(ticket => {
+            let a = ticket.isResolved ? ++completedTickets : ''
+        });
+        const percent = ((completedTickets / totalTickets) * 100).toFixed(2);
+        return +percent;
     }
 
     getTicketsForTable = (tabKey) => {
-        if(this.props.tickets){
-              
-           return this.props.tickets.filter(ticket => tabKey == 1 ? !ticket.isResolved : ticket.isResolved)
-           
+        if (this.props.tickets) {
+            return this.props.tickets.filter(ticket => tabKey == 1 ? !ticket.isResolved : ticket.isResolved)
+
         }
         return [];
     }
+
 
     render() {
         const deptOptionsEl = this.state.departments.map(dept => {
@@ -259,6 +328,8 @@ class Tickets extends React.Component {
                 <Option key={customer._id} value={customer._id}>{customer.name}</Option>
             );
         })
+        console.log(this.state);
+
         return (
             <div className="content-container">
                 <div className="container-header">
@@ -274,22 +345,64 @@ class Tickets extends React.Component {
                         <TabPane tab="Pending" key="1" >
                             <Table
                                 columns={this.tableColumns}
-                                dataSource={ this.getTicketsForTable(1) }
-                                rowKey="_id"
+                                dataSource={this.getTicketsForTable(1)}
+                                pagination={{ pageSize: 6 }}
+                                rowKey={'_id'}
                                 bordered
                             />
                         </TabPane>
                         <TabPane tab="Completed" key="2" >
-                        <Table
+                            <Table
                                 columns={this.tableColumns}
-                                dataSource={ this.getTicketsForTable(2) }
-                                rowKey="_id"
+                                pagination={{ pageSize: 6 }}
+                                dataSource={this.getTicketsForTable(2)}
+                                rowKey={'_id'}
                                 bordered
                             />
+                        </TabPane>
+                        <TabPane tab="Graph" key="3" >
+
+                            <div className="chart-container">
+                                <div className="piechart-container chart">
+                                <Chart 
+                                    width={'600px'}
+                                    height={'350px'}
+                                    chartType="PieChart"
+                                    data={this.getPieChartData()}
+                                    
+                                    options={{
+                                        pieSliceText: 'label',
+                                        title: 'Priority',
+                                        slices: {
+                                            0: { color: 'red' },
+                                            1: { color: 'yellow' },
+                                            2: {color: 'gray'}
+                                        }
+                                    }}
+                                />
+                                </div>
+                               <div className="barchart-container chart">
+                               <Chart 
+                                    width={'600px'}
+                                    height={'350px'}
+                                    chartType="Bar"
+                                    options={{title: "Tickets by department" }}
+                                    data={this.getBarchartData()}
+                                   
+                                />
+                               </div>
+                              
+                            </div>
+
                         </TabPane>
                     </Tabs>
 
                 </div>
+                <div style={{ width: '70%', margin: 'auto', padding: '10px 30px', borderRadius: '3px', backgroundColor: '#444' }}>
+                    <h3 style={{ color: 'white' }}>Completed </h3>
+                    <Progress style={{ color: 'white' }} percent={this.calculatePercentage()} />
+                </div>
+
                 {/* <Divider style={{width: '97%', minWidth: '97%', margin: 'auto'}} /> */}
                 <Modal
                     title="Add Ticket"
@@ -425,11 +538,11 @@ class Tickets extends React.Component {
 }
 
 function mapStateToProps(state) {
-    console.log(state, "STATE");
 
     return {
         apiUrl: state.apiUrl,
-        tickets: state.tickets
+        tickets: state.tickets,
+        departments: state.departments
     }
 }
 

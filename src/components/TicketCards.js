@@ -5,15 +5,19 @@ const { TabPane } = Tabs;
 
 class TicketCards extends React.Component {
     state = {
-        tickets: []
+        tickets: [],
+        ticketFilter: '',
+        filterId: ''
     }
     componentDidMount() {
         console.log(this.props);
-
-        console.log(this.props.match.params.id);
-        this._id = this.props.match.params.id;
-
-
+       let query = this.props.location.search.split('?')[1];
+        
+        let [ticketFilter, filterId] = query.split('=');
+        this.setState({
+            ticketFilter,
+            filterId
+        })
     }
 
     getCustomerById = (id) => this.props.customers.find(customer => customer._id == id) || {}
@@ -25,6 +29,7 @@ class TicketCards extends React.Component {
     getDepartmentsById = (id) => this.props.departments.find(department => department._id == id) || {}
 
     renderAllTickets = (tickets) => {
+        debugger
 
         return tickets.map(ticket => {
 
@@ -58,7 +63,7 @@ class TicketCards extends React.Component {
                     </div>
                 </div>
             );
-            debugger
+            
             return el;
         })
 
@@ -98,7 +103,7 @@ class TicketCards extends React.Component {
                     </div>
                 </div>
             );
-            debugger
+            
             return el;
         })
 
@@ -138,7 +143,7 @@ class TicketCards extends React.Component {
                     </div>
                 </div>
             );
-            debugger
+            
             return el;
         })
 
@@ -148,14 +153,30 @@ class TicketCards extends React.Component {
 
 
     getTicketsForTabs = (tabKey) => {
-        if (tabKey == 1) {
-            return this.props.tickets
+        if(this.state.ticketFilter && this.state.filterId){
+            if (tabKey == 1) {
+                if(this.state.ticketFilter == 'employee'){
+                    debugger
+                    return this.props.tickets.filter(ticket => ticket.employees.find(emp => emp._id == this.state.filterId));
+                }
+                return this.props.tickets.filter(ticket => ticket[this.state.ticketFilter] === this.state.filterId);
+            }
+            else if (tabKey == 2) {
+                if(this.state.ticketFilter == 'employee'){
+                    return this.props.tickets.filter(ticket => !ticket.isResolved && ticket.employees.find(emp => emp._id == this.state.filterId));
+                }
+                return this.props.tickets.filter(ticket => ticket[this.state.ticketFilter] === this.state.filterId && !ticket.isResolved);
+            }
+            else {
+                if(this.state.ticketFilter == 'employee'){
+                    return this.props.tickets.filter(ticket => ticket.isResolved && ticket.employees.find(emp => emp._id == this.state.filterId));
+                }
+                return this.props.tickets.filter(ticket => ticket[this.state.ticketFilter] === this.state.filterId && ticket.isResolved);
+            }
+
         }
-        else if (tabKey == 2) {
-            return this.props.tickets.filter(ticket => !ticket.isResolved);
-        }
-        else {
-            return this.props.tickets.filter(ticket => ticket.isResolved);
+        else{
+            return [];
         }
     }
 

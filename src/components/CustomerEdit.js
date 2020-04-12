@@ -1,9 +1,11 @@
 import React from 'react';
-import { Row, Col, Form, Input, Button } from 'antd';
+import { Row, Col, Form, Input, Button, message } from 'antd';
 import axios from 'axios';
 import { connect } from 'react-redux';
 import createHistory from 'history/createBrowserHistory'
 
+import {setLoginActionFalse} from '../actions/setLoginAction';
+import {startGetCustomers} from '../actions/customersAction'
 
 class CustomerEdit extends React.Component {
     edFormRef = React.createRef();
@@ -39,6 +41,7 @@ class CustomerEdit extends React.Component {
     onFinish = values => {
         console.log(values);
         const { name, email, mobile } = values;
+        this.setState({submitBtnLoading: true})
         axios.put(`${this.props.apiUrl}/customers/${this._id}`, {
             name, email, mobile
         }, {
@@ -48,8 +51,11 @@ class CustomerEdit extends React.Component {
         })
             .then(response => {
 
-                this.props.location.state = { ...response.data }
+                this.props.location.state = { ...response.data };
+                this.props.dispatch(startGetCustomers());
+                this.setState({submitBtnLoading: false})
                 const history = createHistory();
+                message.success('Updated');
                 if (history.location.state && history.location.state.customer) {
                     let state = { ...history.location.state };
                     delete state.customer;
@@ -58,7 +64,7 @@ class CustomerEdit extends React.Component {
 
                 }
             })
-            .catch(err => console.log(err));
+            .catch(err => err.message == 'Request failed with status code 401' ? this.props.dispatch(setLoginActionFalse()) : console.log(err));
 
     };
 
@@ -103,7 +109,7 @@ class CustomerEdit extends React.Component {
                             <Input placeholder="Enter Phone number" />
                         </Form.Item>
                 <Form.Item   >
-                    <Button type="primary" htmlType="submit">Submit</Button>
+                    <Button type="primary" loading={this.state.submitBtnLoading} htmlType="submit">Submit</Button>
                 </Form.Item>
             </Form>
         );

@@ -98,9 +98,26 @@ class App extends React.Component {
         if (localStorage.getItem('authToken') && this.props.isLoggedIn === false) {
             this.props.dispatch(setLoginAction.setLoginActionTrue());
         }
-        else {
-            this.props.dispatch(setLoginAction.setLoginActionFalse());
+        else if(this.props.isLoggedIn === false) {
+            // this.props.dispatch(setLoginAction.setLoginActionFalse());
+            this.props.history.push('/');
         }
+    }
+
+    logout = () => {
+        console.log(this.props)
+       axios.delete(`http://dct-ticket-master.herokuapp.com/users/logout`, {
+           headers: {
+               'x-auth': localStorage.getItem('authToken')
+           }
+       })
+       .then(response => {
+           console.log(response);
+           this.props.history.push('/');
+           this.props.dispatch(setLoginAction.setLoginActionFalse());
+       })
+       .catch(err => console.log(err)
+       )
     }
 
     render() {
@@ -115,7 +132,7 @@ class App extends React.Component {
                             <Menu.Item key="3"><Link to="/departments">Departments</Link></Menu.Item>
                             <Menu.Item key="4"><Link to="/employees">Employees</Link></Menu.Item>
                             <Menu.Item key="5"><Link to="/tickets">Tickets</Link></Menu.Item>
-                            <Menu.Item key="6">Logout</Menu.Item>
+                            <Menu.Item key="6" onClick={this.logout}>Logout</Menu.Item>
                         </Menu>
                     </div>
                 )
@@ -270,7 +287,7 @@ class App extends React.Component {
                         <Route path="/customers/edit/:id" exact component={CustomerEdit} />
                         <Route path="/employees/edit/:id" exact component={EmployeeEdit} />
                         <Route path="/tickets/edit/:id" exact component={TicketEdit} />
-                        <Route path="/tickets/:id" exact component={TicketCards} />
+                        <Route path="/users/tickets" exact component={TicketCards} />
                     </Content>
                     {/* <Footer theme="dark" style={{ textAlign: 'center', color: 'white', padding: '0px', backgroundColor: '#001529' }}>Ticketmaster</Footer> */}
                 </Layout>

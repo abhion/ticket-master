@@ -1,9 +1,11 @@
 import React from 'react'
 import axios from 'axios';
 import { connect } from 'react-redux';
-import { Button, Modal, Form, Row, Col, Input, message, Table, Select } from 'antd';
+import { Button, Modal, Form, Row, Col, Input, message, Table, Select, Popconfirm } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
+import { startGetEmployees } from '../actions/employeesAction';
+import { setLoginActionFalse } from '../actions/setLoginAction';
 
 const { Option } = Select;
 class Employees extends React.Component {
@@ -21,12 +23,14 @@ class Employees extends React.Component {
             { title: 'Name', dataIndex: 'name', key: 1 },
             { title: 'Email', dataIndex: 'email', key: 2 },
             { title: 'Mobile', dataIndex: 'mobile', key: 3 },
-            { title: 'Department', 
+            {
+                title: 'Department',
                 render: (text, record) => {
                     console.log(text, record);
                     return <>{record.department.name}</>
                 }
-            , key: 4 },
+                , key: 4
+            },
             {
                 key: 4,
                 title: 'Action',
@@ -38,9 +42,20 @@ class Employees extends React.Component {
                                 state: { employee: record }
                             }}>Edit | </Link>
                             <Link to={{
-                                pathname: `/tickets/${record._id}`,
-                                state: { employee: record }
-                            }}>Tickets</Link>
+                                pathname: `/users/tickets`,
+                                state: { employee: record },
+                                search: `?employee=${record._id}`
+                            }}>Tickets | </Link>
+                            <Popconfirm
+                                placement="right"
+                                key={record._id}
+                                title="Are you sure?"
+                                onConfirm={(ev) => this.deleteEmployee(ev, record)}
+                                okText="Yes"
+                                cancelText="No"
+                            >
+                                <span className="link-text"> Delete</span>
+                            </Popconfirm>
                         </div>
 
                     );
@@ -49,50 +64,31 @@ class Employees extends React.Component {
         ]
     }
 
-    fetchDepartments = () => {
-        axios.get(`http://dct-ticket-master.herokuapp.com/departments`, {
-            headers: {
-                'x-auth': localStorage.getItem('authToken')
-            }
-        })
-            .then(response => {
-                console.log(response, "dep");
-                this.setState(prevState => {
-                    return {
-                        departments: [...response.data]
-                    }
-                })
-            })
-            .catch(err => message.error(err.message));
-    }
-
-    fetchEmployees = () => {
-        axios.get(`http://dct-ticket-master.herokuapp.com/employees`, {
-            headers: {
-                'x-auth': localStorage.getItem('authToken')
-            }
-        })
-            .then(response => {
-                console.log(response, "Empos");
-                this.setState(prevState => {
-                    return {
-                        employees: [...response.data]
-                    }
-                })
-            })
-            .catch(err => message.error(err.message));
-    }
 
     componentDidMount() {
         console.log(this.props)
-        this.fetchEmployees();
-        this.fetchDepartments();
     }
 
     handleFormFieldsReset = () => {
         setTimeout(() => {
             this.addEmployeeFormRef.current.resetFields()
         }, 20);
+    }
+    deleteEmployee = (d, emp) => {
+        console.log(d, emp);
+        axios.delete(`http://dct-ticket-master.herokuapp.com/employees/${emp._id}`, {
+            headers: {
+                'x-auth': localStorage.getItem('authToken')
+            }
+        })
+            .then(response => {
+                console.log(response, "DOLAFE");
+                if(response.data._id){
+                    message.success('Deleted');
+                }
+                this.props.dispatch(startGetEmployees());
+            })
+            .catch(err => err.message == 'Request failed with status code 401' ? this.props.dispatch(setLoginActionFalse()) : console.log(err));
     }
 
     onAddEmployee = (values) => {
@@ -113,27 +109,25 @@ class Employees extends React.Component {
                     this.setState({ addEmployeeLoading: false });
                 }
                 else {
-                    this.setState(prevState => {
-                        return {
-                            addEmployeeLoading: false,
-                            addModalVisible: false,
-                            employees: [...prevState.employees, response.data]
-                        }
+                    this.props.dispatch(startGetEmployees());
+                    this.setState({
+                        addEmployeeLoading: false,
+                        addModalVisible: false
                     })
                 }
-                this.setState({ addEmployeeLoading: false });
             })
             .catch(err => {
                 console.log(err);
                 message.error(err.message);
                 this.setState({ addEmployeeLoading: false });
+                return  err.message == 'Request failed with status code 401' ? this.props.dispatch(setLoginActionFalse()) : console.log(err);
             })
     }
 
     render() {
-        const optionsEl = this.state.departments.map(dept => {
+        const optionsEl = this.props.departments.map(dept => {
             return (
-                    <Option key={dept._id} value={dept._id}>{dept.name}</Option>
+                <Option key={dept._id} value={dept._id}>{dept.name}</Option>
             );
         })
         return (
@@ -149,7 +143,8 @@ class Employees extends React.Component {
                 <div>
                     <Table
                         columns={this.tableColumns}
-                        dataSource={this.state.employees}
+                        dataSource={this.props.employees}
+                        pagination={{ pageSize: 6 }}
                         rowKey="_id"
                     />
                 </div>
@@ -220,10 +215,10 @@ class Employees extends React.Component {
                                 >
                                     <Select
                                         placeholder="Select a option">
-                                       {optionsEl}
+                                        {optionsEl}
                                     </Select>
-                                </Form.Item> 
-                                </Col>
+                                </Form.Item>
+                            </Col>
                         </Row>
                     </Form>
                 </Modal>
@@ -235,7 +230,9 @@ class Employees extends React.Component {
 
 function mapStateToProps(state) {
     return {
-        apiUrl: state.apiUrl
+        apiUrl: state.apiUrl,
+        employees: state.employees,
+        departments: state.departments
     }
 }
 

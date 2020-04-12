@@ -2,7 +2,9 @@ import React from 'react';
 import { Row, Col, Form, Input, Button, message, Select } from 'antd';
 import axios from 'axios';
 import { connect } from 'react-redux';
-import createHistory from 'history/createBrowserHistory'
+import createHistory from 'history/createBrowserHistory';
+import {startGetEmployees} from '../actions/employeesAction';
+import {setLoginActionFalse} from '../actions/setLoginAction';
 const { Option } = Select;
 
 class EmployeeEdit extends React.Component {
@@ -39,6 +41,7 @@ class EmployeeEdit extends React.Component {
     onFinish = values => {
         console.log(values);
         const { name, email, mobile, department } = values;
+        this.setState({submitBtnLoading: true})
         axios.put(`${this.props.apiUrl}/employees/${this._id}`, {
             name, email, mobile, department
         }, {
@@ -48,15 +51,17 @@ class EmployeeEdit extends React.Component {
         })
             .then(response => {
                 const history = createHistory();
+                message.success('Updated');
+                this.setState({submitBtnLoading: false})
                 if (history.location.state && history.location.state.employee) {
                     let state = { ...history.location.state };
                     delete state.employee;
                     history.replace({ ...history.location, ...{ state: { employee: response.data } } });
                     console.log(this.props.location, "FPa");
-
+                    this.props.dispatch(startGetEmployees());
                 }
             })
-            .catch(err => console.log(err));
+            .catch(err => err.message == 'Request failed with status code 401' ? this.props.dispatch(setLoginActionFalse()) : console.log(err));
 
     };
 
@@ -74,7 +79,7 @@ class EmployeeEdit extends React.Component {
                     }
                 })
             })
-            .catch(err => message.error(err.message));
+            .catch(err => err.message == 'Request failed with status code 401' ? this.props.dispatch(setLoginActionFalse()) : console.log(err));
     }
 
     onReset = () => {
@@ -137,7 +142,7 @@ class EmployeeEdit extends React.Component {
                     </Select>
                 </Form.Item>
                 <Form.Item   >
-                    <Button type="primary" htmlType="submit">Submit</Button>
+                    <Button type="primary" loading={this.state.submitBtnLoading} htmlType="submit">Submit</Button>
                 </Form.Item>
             </Form>
         );

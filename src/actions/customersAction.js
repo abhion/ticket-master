@@ -1,5 +1,5 @@
 import axios from 'axios';
-
+import {setLoginActionFalse} from '../actions/setLoginAction'
 export const setCustomers = (payload) => {
 
     return {
@@ -19,7 +19,7 @@ export const startGetCustomers = () => {
             .then(response => {
                 dispatch(setCustomers(response.data));
             })
-            .catch(err => console.log(err));
+            .catch(err => (err.message == 'Request failed with status code 401') ? dispatch(setLoginActionFalse()) : console.log(err));
     }
 
 }

@@ -43,7 +43,7 @@ main div{
     padding: 10px 60px !important;
 }
 .ant-table-pagination-right{
-    margin: 65px !important;
+    margin: 30px 65px !important;
 }
 .ant-tabs{
     padding: 18px;
@@ -89,5 +89,23 @@ main div{
 }
 .ticket-card{
     margin: 10px 0;
-    box-shadow: 0px 0px 7px 0px #d2cbcb;
+    box-shadow: 0px 0px 7px 0px #d0d0d0
+}
+.ant-progress-text{
+    color: white;
+}
+
+.chart-container{
+    display: flex;
+    padding: 30px;
+}
+.chart{
+    background-color: #dcdcdc;
+    padding: 10px;
+    margin: 5px 10px;
+    border-radius: 3px
+}
+.link-text{
+    color: #18a5dd;
+    cursor: pointer;
 }

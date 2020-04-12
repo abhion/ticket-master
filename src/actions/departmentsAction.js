@@ -1,5 +1,5 @@
 import axios from 'axios';
-
+import {setLoginActionFalse} from '../actions/setLoginAction';
 export const setDepartments = (payload) => {
     return {
         type: 'SET_DEPARTMENTS',
@@ -18,6 +18,6 @@ export const startGetDepartments = () => {
             .then(response => {
                 dispatch(setDepartments(response.data));
             })
-            .catch(err => console.log(err));
+            .catch(err => (err.message == 'Request failed with status code 401') ? dispatch(setLoginActionFalse()) : console.log(err));
     }
 }
